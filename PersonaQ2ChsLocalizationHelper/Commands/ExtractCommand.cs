@@ -1,5 +1,4 @@
 ﻿using AtlusScriptLibrary.Common.Libraries;
-using AtlusScriptLibrary.Common.Logging;
 using AtlusScriptLibrary.Common.Text;
 using AtlusScriptLibrary.FlowScriptLanguage;
 using AtlusScriptLibrary.FlowScriptLanguage.Decompiler;
@@ -22,7 +21,7 @@ internal class ExtractCommand : Command
       "Extract messages files in a folder",
       "Usage: PersonaQ2ChsLocalizationHelper extract -i [inputFolder]",
       "",
-      { "i|input-folder=", "Folder psth to extract files from", i => _inputFolder= i },
+      { "i|input-folder=", "Folder path to extract files from", i => _inputFolder = i },
     };
 #pragma warning restore IDE0028
   }

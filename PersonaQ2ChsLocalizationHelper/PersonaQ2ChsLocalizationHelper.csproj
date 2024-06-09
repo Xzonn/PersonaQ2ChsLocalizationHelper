@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Atlus-Script-Tools\Source\AtlusScriptLibrary\AtlusScriptLibrary.csproj" />
+    <ProjectReference Include="..\CriPakTools\LibCPK\LibCPK.csproj" />
   </ItemGroup>
 
 </Project>
