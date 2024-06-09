@@ -1,0 +1,3 @@
+[submodule "Atlus-Script-Tools"]
+	path = Atlus-Script-Tools
+	url = https://github.com/tge-was-taken/Atlus-Script-Tools.git
