@@ -9,19 +9,19 @@ using System.Text;
 
 namespace PQ2Helper.Commands;
 
-internal class ExtractCommand : Command
+internal class ExportCommand : Command
 {
   private string? _inputFolder;
 
-  public ExtractCommand() : base("extract", "Extract messages files in a folder")
+  public ExportCommand() : base("export", "Export messages files in a folder")
   {
 #pragma warning disable IDE0028
     Options = new()
     {
-      "Extract messages files in a folder",
-      "Usage: PersonaQ2ChsLocalizationHelper extract -i [inputFolder]",
+      "Export messages files in a folder",
+      "Usage: PersonaQ2ChsLocalizationHelper export -i [inputFolder]",
       "",
-      { "i|input-folder=", "Folder path to extract files from", i => _inputFolder = i },
+      { "i|input-folder=", "Folder path to export files from", i => _inputFolder = i },
     };
 #pragma warning restore IDE0028
   }
@@ -41,13 +41,13 @@ internal class ExtractCommand : Command
       }
     }
 
-    ExtractBF(_inputFolder);
-    ExtractBMD(_inputFolder);
+    ExportBF(_inputFolder);
+    ExportBMD(_inputFolder);
 
     return 0;
   }
 
-  private static void ExtractBF(string folder)
+  private static void ExportBF(string folder)
   {
     var library = LibraryLookup.GetLibrary("pq2");
     var decompiler = new FlowScriptDecompiler
@@ -58,20 +58,20 @@ internal class ExtractCommand : Command
 
     foreach (var file in Directory.GetFiles(folder, "*.bf", SearchOption.AllDirectories))
     {
-      Console.WriteLine($"Extracting: {file}");
+      Console.WriteLine($"Exporting: {file}");
       var flowScript = FlowScript.FromFile(file, Encoding.GetEncoding(932));
       decompiler.TryDecompile(flowScript, $"{file}.flow");
       decompiler.MessageScriptFilePath = null;
     }
   }
 
-  private static void ExtractBMD(string folder)
+  private static void ExportBMD(string folder)
   {
     var library = LibraryLookup.GetLibrary("pq2");
 
     foreach (var file in Directory.GetFiles(folder, "*.bmd", SearchOption.AllDirectories))
     {
-      Console.WriteLine($"Extracting: {file}");
+      Console.WriteLine($"Exporting: {file}");
       var script = MessageScript.FromFile(file, encoding: Encoding.GetEncoding(932));
       using var decompiler = new MessageScriptDecompiler(new FileTextWriter($"{file}.msg"))
       {

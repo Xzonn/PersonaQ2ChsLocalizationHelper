@@ -14,7 +14,8 @@ public class Program
       "Usage: PersonaQ2ChsLocalizationHelper COMMAND [OPTIONS]",
       "",
       "Available commands:",
-      new ExtractCommand(),
+      new ExportCommand(),
+      new ImportCommand(),
     };
 
     return commands.Run(args);
