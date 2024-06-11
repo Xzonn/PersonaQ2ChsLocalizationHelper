@@ -44,10 +44,32 @@ internal class ExportCommand : Command
       _outputFolder = _inputFolder;
     }
 
+    ExportARC(_inputFolder, _outputFolder);
     ExportBF(_inputFolder, _outputFolder);
     ExportBMD(_inputFolder, _outputFolder);
 
     return 0;
+  }
+
+  private static void ExportARC(string inputFolder, string outputFolder)
+  {
+    foreach (var file in Directory.GetFiles(inputFolder, "*.arc", SearchOption.AllDirectories))
+    {
+      Console.WriteLine($"Exporting: {file}");
+      var arc = new BIN(file);
+      foreach (var subFile in arc.SubFiles)
+      {
+        var sheetName = $"{Path.GetRelativePath(inputFolder, file)}_{subFile.Name}";
+        if (subFile.GameData is BMD bmd)
+        {
+          ExportBMD(bmd, sheetName, outputFolder);
+        }
+        else if (subFile.GameData is BF bf)
+        {
+          ExportBF(bf, sheetName, outputFolder);
+        }
+      }
+    }
   }
 
   private static void ExportBF(string inputFolder, string outputFolder)
@@ -56,12 +78,17 @@ internal class ExportCommand : Command
     {
       Console.WriteLine($"Exporting: {file}");
       var bf = new BF(file);
-      foreach (var subFile in bf.SubFiles)
+      ExportBF(bf, Path.GetRelativePath(inputFolder, file), outputFolder);
+    }
+  }
+
+  private static void ExportBF(BF bf, string sheetName, string outputFolder)
+  {
+    foreach (var subFile in bf.SubFiles)
+    {
+      if (subFile.GameData is BMD bmd)
       {
-        if (subFile.GameData is BMD bmd)
-        {
-          ExportBMD(bmd, $"{Path.GetRelativePath(inputFolder, file)}.json", outputFolder);
-        }
+        ExportBMD(bmd, sheetName, outputFolder);
       }
     }
   }
@@ -72,11 +99,11 @@ internal class ExportCommand : Command
     {
       Console.WriteLine($"Exporting: {file}");
       var bmd = new BMD(File.ReadAllBytes(file));
-      ExportBMD(bmd, $"{Path.GetRelativePath(inputFolder, file)}.json", outputFolder);
+      ExportBMD(bmd, Path.GetRelativePath(inputFolder, file), outputFolder);
     }
   }
 
-  private static void ExportBMD(BMD bmd, string file, string outputFolder)
+  private static void ExportBMD(BMD bmd, string sheetName, string outputFolder)
   {
     var messages = new Messages
     {
@@ -94,7 +121,7 @@ internal class ExportCommand : Command
       messages.Texts.Add(message);
     }
 
-    var newPath = Path.Combine(outputFolder, file);
+    var newPath = Path.Combine(outputFolder, $"{sheetName}.json");
     Directory.CreateDirectory(Path.GetDirectoryName(newPath) ?? "");
     File.WriteAllText(newPath, JsonSerializer.Serialize(messages, Constants.JSON_OPTION).Replace("\\u3000", "\u3000"));
   }

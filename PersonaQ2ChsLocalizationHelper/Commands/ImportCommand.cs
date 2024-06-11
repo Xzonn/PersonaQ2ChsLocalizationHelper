@@ -48,10 +48,36 @@ internal class ImportCommand : Command
       _outputFolder = _inputFolder;
     }
 
-    ImportBF(_inputFolder, _jsonFolder, _outputFolder);
     ImportBMD(_inputFolder, _jsonFolder, _outputFolder);
+    ImportBF(_inputFolder, _jsonFolder, _outputFolder);
+    ImportARC(_inputFolder, _jsonFolder, _outputFolder);
 
     return 0;
+  }
+
+  private static void ImportARC(string inputFolder, string jsonFolder, string outputFolder)
+  {
+    foreach (var file in Directory.GetFiles(inputFolder, "*.arc", SearchOption.AllDirectories))
+    {
+      Console.WriteLine($"Importing: {file}");
+      var arc = new BIN(file);
+      foreach (var subFile in arc.SubFiles)
+      {
+        var sheetName = $"{Path.GetRelativePath(inputFolder, file)}_{subFile.Name}";
+        if (subFile.GameData is BMD bmd)
+        {
+          ImportBMD(ref bmd, sheetName, jsonFolder);
+        }
+        else if (subFile.GameData is BF bf)
+        {
+          ImportBF(ref bf, sheetName, jsonFolder);
+        }
+      }
+
+      var outputPath = Path.Combine(outputFolder, Path.GetRelativePath(inputFolder, file));
+      Directory.CreateDirectory(Path.GetDirectoryName(outputPath) ?? "");
+      File.WriteAllBytes(outputPath, arc.GetData());
+    }
   }
 
   private static void ImportBF(string inputFolder, string jsonFolder, string outputFolder)
@@ -61,17 +87,22 @@ internal class ImportCommand : Command
       Console.WriteLine($"Importing: {file}");
       var sheetName = Path.GetRelativePath(inputFolder, file);
       var bf = new BF(file);
-      foreach (var subFile in bf.SubFiles)
-      {
-        if (subFile.GameData is BMD bmd)
-        {
-          ImportBMD(ref bmd, Path.Combine(jsonFolder, $"{sheetName}.json"));
-        }
-      }
+      ImportBF(ref bf, sheetName, jsonFolder);
 
       var outputPath = Path.Combine(outputFolder, sheetName);
       Directory.CreateDirectory(Path.GetDirectoryName(outputPath) ?? "");
       File.WriteAllBytes(outputPath, bf.GetData());
+    }
+  }
+
+  private static void ImportBF(ref BF bf, string sheetName, string jsonFolder)
+  {
+    foreach (var subFile in bf.SubFiles)
+    {
+      if (subFile.GameData is BMD bmd)
+      {
+        ImportBMD(ref bmd, sheetName, jsonFolder);
+      }
     }
   }
 
@@ -82,7 +113,7 @@ internal class ImportCommand : Command
       Console.WriteLine($"Importing: {file}");
       var sheetName = Path.GetRelativePath(inputFolder, file);
       var bmd = new BMD(File.ReadAllBytes(file));
-      ImportBMD(ref bmd, Path.Combine(jsonFolder, $"{sheetName}.json"));
+      ImportBMD(ref bmd, jsonFolder, sheetName);
 
       var outputPath = Path.Combine(outputFolder, sheetName);
       Directory.CreateDirectory(Path.GetDirectoryName(outputPath) ?? "");
@@ -90,8 +121,9 @@ internal class ImportCommand : Command
     }
   }
 
-  private static void ImportBMD(ref BMD bmd, string jsonPath)
+  private static void ImportBMD(ref BMD bmd, string sheetName, string jsonFolder)
   {
+    var jsonPath = Path.Combine(jsonFolder, $"{sheetName}.json");
     if (!File.Exists(jsonPath)) { return; }
     var messages = JsonSerializer.Deserialize<Messages>(File.ReadAllText(jsonPath));
     if (messages is null) { return; }
