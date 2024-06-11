@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Atlus-Script-Tools\Source\AtlusScriptLibrary\AtlusScriptLibrary.csproj" />
     <ProjectReference Include="..\CriPakTools\LibCPK\LibCPK.csproj" />
+    <ProjectReference Include="..\PersonaEditor\PersonaEditorLib\PersonaEditorLib.csproj" />
   </ItemGroup>
 
 </Project>

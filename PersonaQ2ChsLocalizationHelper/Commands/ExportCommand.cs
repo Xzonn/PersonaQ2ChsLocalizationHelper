@@ -1,20 +1,15 @@
-﻿using AtlusScriptLibrary.Common.Libraries;
-using AtlusScriptLibrary.Common.Logging;
-using AtlusScriptLibrary.Common.Text;
-using AtlusScriptLibrary.FlowScriptLanguage;
-using AtlusScriptLibrary.FlowScriptLanguage.Decompiler;
-using AtlusScriptLibrary.MessageScriptLanguage;
-using AtlusScriptLibrary.MessageScriptLanguage.Decompiler;
-using Mono.Options;
+﻿using Mono.Options;
+using PersonaEditorLib.FileContainer;
+using PersonaEditorLib.Text;
+using PQ2Helper.Models;
 using System.Text;
+using System.Text.Json;
 
 namespace PQ2Helper.Commands;
 
 internal class ExportCommand : Command
 {
-  private string? _inputFolder;
-  public static Logger Logger = new(nameof(ExportCommand));
-  public static ConsoleLogListener Listener = new(true, LogLevel.Warning | LogLevel.Error | LogLevel.Fatal);
+  private string? _inputFolder, _outputFolder;
 
   public ExportCommand() : base("export", "Export messages files in a folder")
   {
@@ -22,9 +17,10 @@ internal class ExportCommand : Command
     Options = new()
     {
       "Export messages files in a folder",
-      "Usage: PersonaQ2ChsLocalizationHelper export -i [inputFolder]",
+      "Usage: PersonaQ2ChsLocalizationHelper export -i [inputFolder] -o [outputFolder]",
       "",
-      { "i|input-folder=", "Folder path to export files from", i => _inputFolder = i },
+      { "i|input-folder=", "Folder path to export files from", _ => _inputFolder = _ },
+      { "o|output-folder=", "Folder path to export files to", _ => _outputFolder = _ },
     };
 #pragma warning restore IDE0028
   }
@@ -32,7 +28,6 @@ internal class ExportCommand : Command
   public override int Invoke(IEnumerable<string> arguments)
   {
     Options.Parse(arguments);
-    Listener.Subscribe(Logger);
     if (string.IsNullOrEmpty(_inputFolder))
     {
       if (Environment.GetEnvironmentVariable("PQ2_ROOT") is string pq2_root && !string.IsNullOrEmpty(pq2_root))
@@ -44,45 +39,63 @@ internal class ExportCommand : Command
         _inputFolder = Directory.GetCurrentDirectory();
       }
     }
+    if (string.IsNullOrEmpty(_outputFolder))
+    {
+      _outputFolder = _inputFolder;
+    }
 
-    ExportBF(_inputFolder);
-    ExportBMD(_inputFolder);
+    ExportBF(_inputFolder, _outputFolder);
+    ExportBMD(_inputFolder, _outputFolder);
 
     return 0;
   }
 
-  private static void ExportBF(string folder)
+  private static void ExportBF(string inputFolder, string outputFolder)
   {
-    var library = LibraryLookup.GetLibrary("pq2");
-    var decompiler = new FlowScriptDecompiler
-    {
-      SumBits = false,
-      Library = library,
-    };
-    decompiler.AddListener(Listener);
-
-    foreach (var file in Directory.GetFiles(folder, "*.bf", SearchOption.AllDirectories))
+    foreach (var file in Directory.GetFiles(inputFolder, "*.bf", SearchOption.AllDirectories))
     {
       Console.WriteLine($"Exporting: {file}");
-      var flowScript = FlowScript.FromFile(file, Encoding.GetEncoding(932));
-      decompiler.TryDecompile(flowScript, $"{file}.flow");
-      decompiler.MessageScriptFilePath = null;
+      var bf = new BF(file);
+      foreach (var subFile in bf.SubFiles)
+      {
+        if (subFile.GameData is BMD bmd)
+        {
+          ExportBMD(bmd, $"{Path.GetRelativePath(inputFolder, file)}.json", outputFolder);
+        }
+      }
     }
   }
 
-  private static void ExportBMD(string folder)
+  private static void ExportBMD(string inputFolder, string outputFolder)
   {
-    var library = LibraryLookup.GetLibrary("pq2");
-
-    foreach (var file in Directory.GetFiles(folder, "*.bmd", SearchOption.AllDirectories))
+    foreach (var file in Directory.GetFiles(inputFolder, "*.bmd", SearchOption.AllDirectories))
     {
       Console.WriteLine($"Exporting: {file}");
-      var script = MessageScript.FromFile(file, encoding: Encoding.GetEncoding(932));
-      using var decompiler = new MessageScriptDecompiler(new FileTextWriter($"{file}.msg"))
-      {
-        Library = library,
-      };
-      decompiler.Decompile(script);
+      var bmd = new BMD(File.ReadAllBytes(file));
+      ExportBMD(bmd, $"{Path.GetRelativePath(inputFolder, file)}.json", outputFolder);
     }
+  }
+
+  private static void ExportBMD(BMD bmd, string file, string outputFolder)
+  {
+    var messages = new Messages
+    {
+      Speakers = [.. bmd.Name.Select(x => x.NameBytes.GetTextBases().GetString(Constants.ENCODING, true))],
+    };
+
+    foreach (var msg in bmd.Msg)
+    {
+      var message = new Message
+      {
+        ID = msg.Name,
+        Speaker = msg.NameIndex < messages.Speakers.Count ? messages.Speakers[msg.NameIndex] : "",
+        Lines = [.. msg.MsgStrings.Select(x => x.GetTextBases().GetString(Constants.ENCODING, true))],
+      };
+      messages.Texts.Add(message);
+    }
+
+    var newPath = Path.Combine(outputFolder, file);
+    Directory.CreateDirectory(Path.GetDirectoryName(newPath) ?? "");
+    File.WriteAllText(newPath, JsonSerializer.Serialize(messages, Constants.JSON_OPTION).Replace("\\u3000", "\u3000"));
   }
 }

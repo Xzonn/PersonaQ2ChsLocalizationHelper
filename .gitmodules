@@ -1,6 +1,6 @@
-[submodule "Atlus-Script-Tools"]
-	path = Atlus-Script-Tools
-	url = https://github.com/tge-was-taken/Atlus-Script-Tools.git
 [submodule "CriPakTools"]
 	path = CriPakTools
 	url = https://github.com/Xzonn/CriPakTools.git
+[submodule "PersonaEditor"]
+	path = PersonaEditor
+	url = https://github.com/Meloman19/PersonaEditor.git

@@ -9,6 +9,7 @@ public class Program
   public static int Main(string[] args)
   {
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
     CommandSet commands = new("PersonaQ2ChsLocalizationHelper")
     {
       "Usage: PersonaQ2ChsLocalizationHelper COMMAND [OPTIONS]",
