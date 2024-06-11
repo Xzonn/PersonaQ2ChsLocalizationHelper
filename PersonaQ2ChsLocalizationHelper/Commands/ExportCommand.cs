@@ -1,4 +1,5 @@
 ﻿using AtlusScriptLibrary.Common.Libraries;
+using AtlusScriptLibrary.Common.Logging;
 using AtlusScriptLibrary.Common.Text;
 using AtlusScriptLibrary.FlowScriptLanguage;
 using AtlusScriptLibrary.FlowScriptLanguage.Decompiler;
@@ -12,6 +13,8 @@ namespace PQ2Helper.Commands;
 internal class ExportCommand : Command
 {
   private string? _inputFolder;
+  public static Logger Logger = new(nameof(ExportCommand));
+  public static ConsoleLogListener Listener = new(true, LogLevel.Info | LogLevel.Warning | LogLevel.Error | LogLevel.Fatal);
 
   public ExportCommand() : base("export", "Export messages files in a folder")
   {
@@ -29,6 +32,7 @@ internal class ExportCommand : Command
   public override int Invoke(IEnumerable<string> arguments)
   {
     Options.Parse(arguments);
+    Listener.Subscribe(Logger);
     if (string.IsNullOrEmpty(_inputFolder))
     {
       if (Environment.GetEnvironmentVariable("PQ2_ROOT") is string pq2_root && !string.IsNullOrEmpty(pq2_root))
@@ -55,6 +59,7 @@ internal class ExportCommand : Command
       SumBits = false,
       Library = library,
     };
+    decompiler.AddListener(Listener);
 
     foreach (var file in Directory.GetFiles(folder, "*.bf", SearchOption.AllDirectories))
     {

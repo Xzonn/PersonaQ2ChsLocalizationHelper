@@ -1,4 +1,5 @@
 ﻿using AtlusScriptLibrary.Common.Libraries;
+using AtlusScriptLibrary.Common.Logging;
 using AtlusScriptLibrary.Common.Text.Encodings;
 using AtlusScriptLibrary.FlowScriptLanguage.Compiler;
 using AtlusScriptLibrary.MessageScriptLanguage.Compiler;
@@ -10,6 +11,8 @@ namespace PQ2Helper.Commands;
 internal class ImportCommand : Command
 {
   private string? _inputFolder, _outputFolder;
+  public static Logger Logger = new(nameof(ImportCommand));
+  public static ConsoleLogListener Listener = new(true, LogLevel.Info | LogLevel.Warning | LogLevel.Error | LogLevel.Fatal);
 
   public ImportCommand() : base("import", "Import messages files in a folder")
   {
@@ -60,6 +63,7 @@ internal class ImportCommand : Command
       ProcedureHookMode = ProcedureHookMode.None,
       Library = library,
     };
+    compiler.AddListener(Listener);
 
     foreach (var file in Directory.GetFiles(folder, "*.bf", SearchOption.AllDirectories))
     {
