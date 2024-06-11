@@ -12,7 +12,7 @@ internal class ImportCommand : Command
 {
   private string? _inputFolder, _outputFolder;
   public static Logger Logger = new(nameof(ImportCommand));
-  public static ConsoleLogListener Listener = new(true, LogLevel.Info | LogLevel.Warning | LogLevel.Error | LogLevel.Fatal);
+  public static ConsoleLogListener Listener = new(true, LogLevel.Warning | LogLevel.Error | LogLevel.Fatal);
 
   public ImportCommand() : base("import", "Import messages files in a folder")
   {

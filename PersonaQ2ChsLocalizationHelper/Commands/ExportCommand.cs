@@ -14,7 +14,7 @@ internal class ExportCommand : Command
 {
   private string? _inputFolder;
   public static Logger Logger = new(nameof(ExportCommand));
-  public static ConsoleLogListener Listener = new(true, LogLevel.Info | LogLevel.Warning | LogLevel.Error | LogLevel.Fatal);
+  public static ConsoleLogListener Listener = new(true, LogLevel.Warning | LogLevel.Error | LogLevel.Fatal);
 
   public ExportCommand() : base("export", "Export messages files in a folder")
   {
