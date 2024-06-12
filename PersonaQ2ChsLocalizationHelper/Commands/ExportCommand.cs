@@ -1,4 +1,5 @@
 ﻿using Mono.Options;
+using PersonaEditorLib;
 using PersonaEditorLib.FileContainer;
 using PersonaEditorLib.Text;
 using PQ2Helper.Models;
@@ -44,66 +45,43 @@ internal class ExportCommand : Command
       _outputFolder = _inputFolder;
     }
 
-    ExportARC(_inputFolder, _outputFolder);
-    ExportBF(_inputFolder, _outputFolder);
-    ExportBMD(_inputFolder, _outputFolder);
+    Export(_inputFolder, _outputFolder);
 
     return 0;
   }
 
-  private static void ExportARC(string inputFolder, string outputFolder)
+  private static void Export(string inputFolder, string outputFolder)
   {
-    foreach (var file in Directory.GetFiles(inputFolder, "*.arc", SearchOption.AllDirectories))
+    Helper.EnumerateFiles(inputFolder, (gameData, sheetName) =>
     {
-      Console.WriteLine($"Exporting: {file}");
-      var arc = new BIN(file);
-      foreach (var subFile in arc.SubFiles)
+      if (ExtractFile(gameData, outputFolder, sheetName))
       {
-        var sheetName = $"{Path.GetRelativePath(inputFolder, file)}_{subFile.Name}";
-        if (subFile.GameData is BMD bmd)
-        {
-          ExportBMD(bmd, sheetName, outputFolder);
-        }
-        else if (subFile.GameData is BF bf)
-        {
-          ExportBF(bf, sheetName, outputFolder);
-        }
+        Console.WriteLine($"Exported: {sheetName}");
       }
-    }
+    });
   }
 
-  private static void ExportBF(string inputFolder, string outputFolder)
+  private static bool ExtractFile(IGameData gameData, string outputFolder, string sheetName)
   {
-    foreach (var file in Directory.GetFiles(inputFolder, "*.bf", SearchOption.AllDirectories))
+    if (gameData is BMD bmd)
     {
-      Console.WriteLine($"Exporting: {file}");
-      var bf = new BF(file);
-      ExportBF(bf, Path.GetRelativePath(inputFolder, file), outputFolder);
+      ExportBMD(bmd, outputFolder, sheetName);
+      return true;
     }
-  }
-
-  private static void ExportBF(BF bf, string sheetName, string outputFolder)
-  {
-    foreach (var subFile in bf.SubFiles)
+    var returnValue = false;
+    foreach (var subFile in gameData.SubFiles)
     {
-      if (subFile.GameData is BMD bmd)
+      var subSheetName = gameData switch
       {
-        ExportBMD(bmd, sheetName, outputFolder);
-      }
+        BF => sheetName,
+        _ => $"{sheetName}_{subFile.Name}"
+      };
+      returnValue = ExtractFile(subFile.GameData, outputFolder, subSheetName) || returnValue;
     }
+    return returnValue;
   }
 
-  private static void ExportBMD(string inputFolder, string outputFolder)
-  {
-    foreach (var file in Directory.GetFiles(inputFolder, "*.bmd", SearchOption.AllDirectories))
-    {
-      Console.WriteLine($"Exporting: {file}");
-      var bmd = new BMD(File.ReadAllBytes(file));
-      ExportBMD(bmd, Path.GetRelativePath(inputFolder, file), outputFolder);
-    }
-  }
-
-  private static void ExportBMD(BMD bmd, string sheetName, string outputFolder)
+  private static void ExportBMD(BMD bmd, string outputFolder, string sheetName)
   {
     var messages = new Messages
     {
