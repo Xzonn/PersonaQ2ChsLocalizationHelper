@@ -52,20 +52,27 @@ internal class ExportCommand : Command
 
   private static void Export(string inputFolder, string outputFolder)
   {
-    Helper.EnumerateFiles(inputFolder, (gameData, sheetName) =>
+    Helper.EnumerateFiles(inputFolder, (gameFile, sheetName) =>
     {
-      if (ExtractFile(gameData, outputFolder, sheetName))
+      if (ExtractFile(gameFile, outputFolder, sheetName))
       {
         Console.WriteLine($"Exported: {sheetName}");
       }
     });
   }
 
-  private static bool ExtractFile(IGameData gameData, string outputFolder, string sheetName)
+  private static bool ExtractFile(GameFile gameFile, string outputFolder, string sheetName)
   {
+    var gameData = gameFile.GameData;
+    var extension = Path.GetExtension(gameFile.Name).ToLowerInvariant();
     if (gameData is BMD bmd)
     {
       ExportBMD(bmd, outputFolder, sheetName);
+      return true;
+    }
+    else if (extension == ".ctpk")
+    {
+      ExportCTPK(gameData, outputFolder, sheetName);
       return true;
     }
     var returnValue = false;
@@ -76,7 +83,7 @@ internal class ExportCommand : Command
         BF => sheetName,
         _ => $"{sheetName}_{subFile.Name}"
       };
-      returnValue = ExtractFile(subFile.GameData, outputFolder, subSheetName) || returnValue;
+      returnValue = ExtractFile(subFile, outputFolder, subSheetName) || returnValue;
     }
     return returnValue;
   }
@@ -102,5 +109,12 @@ internal class ExportCommand : Command
     var newPath = Path.Combine(outputFolder, $"{sheetName}.json");
     Directory.CreateDirectory(Path.GetDirectoryName(newPath) ?? "");
     File.WriteAllText(newPath, JsonSerializer.Serialize(messages, Constants.JSON_OPTION).Replace("\\u3000", "\u3000"));
+  }
+
+  private static void ExportCTPK(IGameData gameData, string outputFolder, string sheetName)
+  {
+    var newPath = Path.Combine(outputFolder, sheetName);
+    Directory.CreateDirectory(Path.GetDirectoryName(newPath) ?? "");
+    File.WriteAllBytes(newPath, gameData.GetData());
   }
 }

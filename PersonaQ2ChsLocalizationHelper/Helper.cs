@@ -11,7 +11,7 @@ namespace PQ2Helper;
 
 internal class Helper
 {
-  public static void EnumerateFiles(string inputFolder, Action<IGameData, string> action)
+  public static void EnumerateFiles(string inputFolder, Action<GameFile, string> action)
   {
     foreach (var filePath in Directory.EnumerateFiles(inputFolder, "*", SearchOption.AllDirectories))
     {
@@ -23,6 +23,7 @@ internal class Helper
         case ".bin":
         case ".arc":
         case ".pack":
+        case ".tpc":
           gameData = new BIN(File.ReadAllBytes(filePath));
           break;
         case ".pm1":
@@ -40,7 +41,7 @@ internal class Helper
         default:
           continue;
       }
-      action(gameData, sheetName);
+      action(new GameFile(sheetName, gameData), sheetName);
     }
   }
 }

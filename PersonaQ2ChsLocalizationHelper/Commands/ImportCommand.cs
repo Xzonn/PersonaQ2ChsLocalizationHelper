@@ -56,13 +56,13 @@ internal class ImportCommand : Command
 
   private static void Import(string inputFolder, string jsonFolder, string outputFolder)
   {
-    Helper.EnumerateFiles(inputFolder, (gameData, sheetName) =>
+    Helper.EnumerateFiles(inputFolder, (gamefile, sheetName) =>
     {
-      if (ImportFile(gameData, outputFolder, sheetName, jsonFolder))
+      if (ImportFile(gamefile.GameData, outputFolder, sheetName, jsonFolder))
       {
         var outputPath = Path.Combine(outputFolder, sheetName);
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath) ?? "");
-        File.WriteAllBytes(outputPath, gameData.GetData());
+        File.WriteAllBytes(outputPath, gamefile.GameData.GetData());
 
         Console.WriteLine($"Imported: {sheetName}");
       }
