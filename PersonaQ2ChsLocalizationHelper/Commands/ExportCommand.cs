@@ -54,14 +54,14 @@ internal class ExportCommand : Command
   {
     Helper.EnumerateFiles(inputFolder, (gameFile, sheetName) =>
     {
-      if (ExtractFile(gameFile, outputFolder, sheetName))
+      if (ExportGameFile(gameFile, outputFolder, sheetName))
       {
         Console.WriteLine($"Exported: {sheetName}");
       }
     });
   }
 
-  private static bool ExtractFile(GameFile gameFile, string outputFolder, string sheetName)
+  private static bool ExportGameFile(GameFile gameFile, string outputFolder, string sheetName)
   {
     var gameData = gameFile.GameData;
     var extension = Path.GetExtension(gameFile.Name).ToLowerInvariant();
@@ -70,9 +70,9 @@ internal class ExportCommand : Command
       ExportBMD(bmd, outputFolder, sheetName);
       return true;
     }
-    else if (extension == ".ctpk")
+    else if (Constants.EXTENSIONS_TO_EXPORT.Contains(extension))
     {
-      ExportCTPK(gameData, outputFolder, sheetName);
+      ExportFile(gameData, outputFolder, sheetName);
       return true;
     }
     var returnValue = false;
@@ -83,7 +83,7 @@ internal class ExportCommand : Command
         BF => sheetName,
         _ => $"{sheetName}_{subFile.Name}"
       };
-      returnValue = ExtractFile(subFile, outputFolder, subSheetName) || returnValue;
+      returnValue = ExportGameFile(subFile, outputFolder, subSheetName) || returnValue;
     }
     return returnValue;
   }
@@ -111,7 +111,7 @@ internal class ExportCommand : Command
     File.WriteAllText(newPath, JsonSerializer.Serialize(messages, Constants.JSON_OPTION).Replace("\\u3000", "\u3000"));
   }
 
-  private static void ExportCTPK(IGameData gameData, string outputFolder, string sheetName)
+  private static void ExportFile(IGameData gameData, string outputFolder, string sheetName)
   {
     var newPath = Path.Combine(outputFolder, sheetName);
     Directory.CreateDirectory(Path.GetDirectoryName(newPath) ?? "");

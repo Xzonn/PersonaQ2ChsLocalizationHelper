@@ -1,6 +1,7 @@
 ﻿using Mono.Options;
 using PersonaEditorLib;
 using PersonaEditorLib.FileContainer;
+using PersonaEditorLib.Other;
 using PersonaEditorLib.Text;
 using PQ2Helper.Models;
 using System.Text.Json;
@@ -9,7 +10,7 @@ namespace PQ2Helper.Commands;
 
 internal class ImportCommand : Command
 {
-  private string? _inputFolder, _jsonFolder, _outputFolder;
+  private string? _inputFolder, _importFolder, _outputFolder;
 
   public ImportCommand() : base("import", "Import messages files in a folder")
   {
@@ -17,10 +18,10 @@ internal class ImportCommand : Command
     Options = new()
     {
       "Import messages files in a folder",
-      "Usage: PersonaQ2ChsLocalizationHelper import -i [inputFolder] -j [jsonFolder] -o [outputFolder]",
+      "Usage: PersonaQ2ChsLocalizationHelper import -i [inputFolder] -j [importFolder] -o [outputFolder]",
       "",
       { "i|input-folder=", "Folder path to import files from", _ => _inputFolder = _ },
-      { "j|json-folder=", "Folder path to json files", _ => _jsonFolder = _ },
+      { "j|json-folder=", "Folder path to json files", _ => _importFolder = _ },
       { "o|output-folder=", "Folder path to save imported files", _ => _outputFolder = _ },
     };
 #pragma warning restore IDE0028
@@ -40,25 +41,25 @@ internal class ImportCommand : Command
         _inputFolder = Directory.GetCurrentDirectory();
       }
     }
-    if (string.IsNullOrEmpty(_jsonFolder))
+    if (string.IsNullOrEmpty(_importFolder))
     {
-      _jsonFolder = _inputFolder;
+      _importFolder = _inputFolder;
     }
     if (string.IsNullOrEmpty(_outputFolder))
     {
       _outputFolder = _inputFolder;
     }
 
-    Import(_inputFolder, _jsonFolder, _outputFolder);
+    Import(_inputFolder, _importFolder, _outputFolder);
 
     return 0;
   }
 
-  private static void Import(string inputFolder, string jsonFolder, string outputFolder)
+  private static void Import(string inputFolder, string importFolder, string outputFolder)
   {
     Helper.EnumerateFiles(inputFolder, (gamefile, sheetName) =>
     {
-      if (ImportFile(gamefile.GameData, outputFolder, sheetName, jsonFolder))
+      if (ImportGameFile(gamefile, outputFolder, sheetName, importFolder))
       {
         var outputPath = Path.Combine(outputFolder, sheetName);
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath) ?? "");
@@ -69,11 +70,18 @@ internal class ImportCommand : Command
     });
   }
 
-  private static bool ImportFile(IGameData gameData, string outputFolder, string sheetName, string jsonFolder)
+  private static bool ImportGameFile(GameFile gameFile, string outputFolder, string sheetName, string importFolder)
   {
+    var gameData = gameFile.GameData;
+    var extension = Path.GetExtension(gameFile.Name).ToLowerInvariant();
     if (gameData is BMD bmd)
     {
-      ImportBMD(ref bmd, sheetName, jsonFolder);
+      ImportBMD(ref bmd, sheetName, importFolder);
+      return true;
+    }
+    else if (Constants.EXTENSIONS_TO_EXPORT.Contains(extension))
+    {
+      ImportFile(ref gameFile, sheetName, importFolder);
       return true;
     }
     var returnValue = false;
@@ -84,14 +92,14 @@ internal class ImportCommand : Command
         BF => sheetName,
         _ => $"{sheetName}_{subFile.Name}"
       };
-      returnValue = ImportFile(subFile.GameData, outputFolder, subSheetName, jsonFolder) || returnValue;
+      returnValue = ImportGameFile(subFile, outputFolder, subSheetName, importFolder) || returnValue;
     }
     return returnValue;
   }
 
-  private static void ImportBMD(ref BMD bmd, string sheetName, string jsonFolder)
+  private static void ImportBMD(ref BMD bmd, string sheetName, string importFolder)
   {
-    var jsonPath = Path.Combine(jsonFolder, $"{sheetName}.json");
+    var jsonPath = Path.Combine(importFolder, $"{sheetName}.json");
     if (!File.Exists(jsonPath)) { return; }
     var messages = JsonSerializer.Deserialize<Messages>(File.ReadAllText(jsonPath));
     if (messages is null) { return; }
@@ -110,5 +118,12 @@ internal class ImportCommand : Command
       var speaker = messages.Speakers[i];
       bmd.Name[i].NameBytes = speaker.GetTextBases(Constants.ENCODING).GetByteArray();
     }
+  }
+
+  private static void ImportFile(ref GameFile gameFile, string sheetName, string importFolder)
+  {
+    var filePath = Path.Combine(importFolder, sheetName);
+    if (!File.Exists(filePath)) { return; }
+    gameFile.GameData = new DAT(File.ReadAllBytes(filePath));
   }
 }
