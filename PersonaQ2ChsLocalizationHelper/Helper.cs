@@ -16,8 +16,6 @@ internal class Helper
       switch (extension)
       {
         case ".arc":
-          // TODO
-          continue;
         case ".bin":
         case ".pack":
         case ".tpc":
