@@ -1,11 +1,6 @@
-﻿using PersonaEditorLib.FileContainer;
+﻿using PersonaEditorLib;
+using PersonaEditorLib.FileContainer;
 using PersonaEditorLib.Text;
-using PersonaEditorLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PQ2Helper;
 
