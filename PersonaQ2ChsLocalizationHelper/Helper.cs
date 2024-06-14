@@ -15,8 +15,10 @@ internal class Helper
       IGameData gameData;
       switch (extension)
       {
-        case ".bin":
         case ".arc":
+          // TODO
+          continue;
+        case ".bin":
         case ".pack":
         case ".tpc":
           gameData = new BIN(File.ReadAllBytes(filePath));
