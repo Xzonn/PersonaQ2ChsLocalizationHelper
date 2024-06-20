@@ -1,6 +1,8 @@
 ﻿using PersonaEditorLib;
 using PersonaEditorLib.FileContainer;
+using PersonaEditorLib.SpriteContainer;
 using PersonaEditorLib.Text;
+using PQ2Helper.Models;
 
 namespace PQ2Helper;
 
@@ -34,6 +36,9 @@ internal class Helper
             break;
           case ".bmd":
             gameData = new BMD(File.ReadAllBytes(filePath));
+            break;
+          case ".ctpk":
+            gameData = new CTPK(filePath);
             break;
           default:
             continue;

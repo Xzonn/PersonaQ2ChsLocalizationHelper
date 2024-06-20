@@ -1,6 +1,8 @@
 ﻿using Mono.Options;
 using PersonaEditorLib;
 using PersonaEditorLib.FileContainer;
+using PersonaEditorLib.Sprite;
+using PersonaEditorLib.SpriteContainer;
 using PersonaEditorLib.Text;
 using PQ2Helper.Models;
 using System.Text;
@@ -12,7 +14,7 @@ internal class ExportCommand : Command
 {
   private string? _inputFolder, _outputFolder;
 
-  public ExportCommand() : base("export", "Export messages files in a folder")
+  public ExportCommand() : base("export", "Export files in a folder")
   {
 #pragma warning disable IDE0028
     Options = new()
@@ -70,18 +72,25 @@ internal class ExportCommand : Command
       ExportBMD(bmd, outputFolder, sheetName);
       return true;
     }
+    else if (gameData is PNG png)
+    {
+      ExportPNG(png, outputFolder, sheetName);
+      return true;
+    }
     else if (Constants.EXTENSIONS_TO_EXPORT.Contains(extension))
     {
       ExportFile(gameData, outputFolder, sheetName);
       return true;
     }
     var returnValue = false;
-    foreach (var subFile in gameData.SubFiles)
+    for (var i = 0; i < gameData.SubFiles.Count; i++)
     {
+      var subFile = gameData.SubFiles[i];
       var subSheetName = gameData switch
       {
         BF => sheetName,
-        _ => $"{sheetName}_{subFile.Name}"
+        CTPK => $"{sheetName}.{i:D2}.png",
+        _ => $"{sheetName}_{subFile.Name}",
       };
       returnValue = ExportGameFile(subFile, outputFolder, subSheetName) || returnValue;
     }
@@ -109,6 +118,13 @@ internal class ExportCommand : Command
     var newPath = Path.Combine(outputFolder, $"{sheetName}.json");
     Directory.CreateDirectory(Path.GetDirectoryName(newPath) ?? "");
     File.WriteAllText(newPath, JsonSerializer.Serialize(messages, Constants.JSON_OPTION).Replace("\\u3000", "\u3000"));
+  }
+
+  private static void ExportPNG(PNG png, string outputFolder, string sheetName)
+  {
+    var newPath = Path.Combine(outputFolder, sheetName);
+    Directory.CreateDirectory(Path.GetDirectoryName(newPath) ?? "");
+    png.Bitmap.Save(newPath);
   }
 
   private static void ExportFile(IGameData gameData, string outputFolder, string sheetName)

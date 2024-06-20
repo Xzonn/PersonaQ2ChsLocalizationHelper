@@ -13,5 +13,5 @@ internal class Constants
     WriteIndented = true,
   };
   public readonly static Encoding ENCODING = Encoding.GetEncoding(932);
-  public readonly static string[] EXTENSIONS_TO_EXPORT = [".ctd", ".ctpk", ".ftd", ".qtd", ".tbl"];
+  public readonly static string[] EXTENSIONS_TO_EXPORT = [".ctd", ".ftd", ".qtd", ".tbl"];
 }

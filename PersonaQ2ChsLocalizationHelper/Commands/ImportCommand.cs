@@ -2,6 +2,8 @@
 using PersonaEditorLib;
 using PersonaEditorLib.FileContainer;
 using PersonaEditorLib.Other;
+using PersonaEditorLib.Sprite;
+using PersonaEditorLib.SpriteContainer;
 using PersonaEditorLib.Text;
 using PQ2Helper.Models;
 using System.Text.Json;
@@ -12,7 +14,7 @@ internal class ImportCommand : Command
 {
   private string? _inputFolder, _importFolder, _outputFolder;
 
-  public ImportCommand() : base("import", "Import messages files in a folder")
+  public ImportCommand() : base("import", "Import files in a folder")
   {
 #pragma warning disable IDE0028
     Options = new()
@@ -76,33 +78,37 @@ internal class ImportCommand : Command
     var extension = Path.GetExtension(gameFile.Name).ToLowerInvariant();
     if (gameData is BMD bmd)
     {
-      ImportBMD(ref bmd, sheetName, importFolder);
-      return true;
+      return ImportBMD(ref bmd, sheetName, importFolder);
+    }
+    else if (gameData is PNG png)
+    {
+      return ImportPNG(ref png, sheetName, importFolder);
     }
     else if (Constants.EXTENSIONS_TO_EXPORT.Contains(extension))
     {
-      ImportFile(ref gameFile, sheetName, importFolder);
-      return true;
+      return ImportFile(ref gameFile, sheetName, importFolder);
     }
     var returnValue = false;
-    foreach (var subFile in gameData.SubFiles)
+    for (var i = 0; i < gameData.SubFiles.Count; i++)
     {
+      var subFile = gameData.SubFiles[i];
       var subSheetName = gameData switch
       {
         BF => sheetName,
-        _ => $"{sheetName}_{subFile.Name}"
+        CTPK => $"{sheetName}.{i:D2}.png",
+        _ => $"{sheetName}_{subFile.Name}",
       };
       returnValue = ImportGameFile(subFile, outputFolder, subSheetName, importFolder) || returnValue;
     }
     return returnValue;
   }
 
-  private static void ImportBMD(ref BMD bmd, string sheetName, string importFolder)
+  private static bool ImportBMD(ref BMD bmd, string sheetName, string importFolder)
   {
     var jsonPath = Path.Combine(importFolder, $"{sheetName}.json");
-    if (!File.Exists(jsonPath)) { return; }
+    if (!File.Exists(jsonPath)) { return false; }
     var messages = JsonSerializer.Deserialize<Messages>(File.ReadAllText(jsonPath));
-    if (messages is null) { return; }
+    if (messages is null) { return false; }
 
     for (var i = 0; i < bmd.Msg.Count; i++)
     {
@@ -118,12 +124,22 @@ internal class ImportCommand : Command
       var speaker = messages.Speakers[i];
       bmd.Name[i].NameBytes = speaker.GetTextBases(Constants.ENCODING).GetByteArray();
     }
+    return true;
   }
 
-  private static void ImportFile(ref GameFile gameFile, string sheetName, string importFolder)
+  private static bool ImportPNG(ref PNG png, string sheetName, string importFolder)
+  {
+    var pngPath = Path.Combine(importFolder, sheetName);
+    if (!File.Exists(pngPath)) { return false; }
+    png.Bitmap = new System.Drawing.Bitmap(pngPath);
+    return true;
+  }
+
+  private static bool ImportFile(ref GameFile gameFile, string sheetName, string importFolder)
   {
     var filePath = Path.Combine(importFolder, sheetName);
-    if (!File.Exists(filePath)) { return; }
+    if (!File.Exists(filePath)) { return false; }
     gameFile.GameData = new DAT(File.ReadAllBytes(filePath));
+    return true;
   }
 }

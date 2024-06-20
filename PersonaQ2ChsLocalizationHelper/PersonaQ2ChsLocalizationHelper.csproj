@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>PQ2Helper</RootNamespace>
@@ -10,11 +10,21 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Options" Version="6.12.0.148" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.6" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CriPakTools\LibCPK\LibCPK.csproj" />
     <ProjectReference Include="..\PersonaEditor\PersonaEditorLib\PersonaEditorLib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="image_nintendo">
+      <HintPath>..\Kuriimu\image_nintendo.dll</HintPath>
+    </Reference>
+    <Reference Include="Kontract">
+      <HintPath>..\Kuriimu\Kontract.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
