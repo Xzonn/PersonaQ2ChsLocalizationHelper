@@ -40,6 +40,15 @@ internal class Helper
           case ".ctpk":
             gameData = new CTPK(filePath);
             break;
+          case ".cgfx":
+          case ".bcres":
+          case ".bcmdl":
+          case ".bctex":
+            gameData = new CGFX(filePath);
+            break;
+          case ".spr3":
+            gameData = new SPR3(filePath);
+            break;
           default:
             continue;
         }

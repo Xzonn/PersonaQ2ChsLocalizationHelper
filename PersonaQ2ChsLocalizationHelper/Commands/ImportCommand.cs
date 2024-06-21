@@ -95,7 +95,7 @@ internal class ImportCommand : Command
       var subSheetName = gameData switch
       {
         BF => sheetName,
-        CTPK => $"{sheetName}.{i:D2}.png",
+        CTPK or CGFX or SPR3 => $"{sheetName}.{i:D2}.png",
         _ => $"{sheetName}_{subFile.Name}",
       };
       returnValue = ImportGameFile(subFile, outputFolder, subSheetName, importFolder) || returnValue;

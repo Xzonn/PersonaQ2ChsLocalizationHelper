@@ -89,7 +89,7 @@ internal class ExportCommand : Command
       var subSheetName = gameData switch
       {
         BF => sheetName,
-        CTPK => $"{sheetName}.{i:D2}.png",
+        CTPK or CGFX or SPR3 => $"{sheetName}.{i:D2}.png",
         _ => $"{sheetName}_{subFile.Name}",
       };
       returnValue = ExportGameFile(subFile, outputFolder, subSheetName) || returnValue;
