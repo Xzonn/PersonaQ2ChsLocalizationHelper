@@ -2,7 +2,6 @@
 using PersonaEditorLib.FileContainer;
 using PersonaEditorLib.SpriteContainer;
 using PersonaEditorLib.Text;
-using PQ2Helper.Models;
 
 namespace PQ2Helper;
 
@@ -21,6 +20,7 @@ internal class Helper
         {
           case ".arc":
           case ".bin":
+          case ".gsd":
           case ".pack":
           case ".tpc":
             gameData = new BIN(File.ReadAllBytes(filePath));
