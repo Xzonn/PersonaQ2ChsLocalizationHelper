@@ -21,6 +21,7 @@ internal class Helper
           case ".arc":
           case ".bin":
           case ".gsd":
+          case ".pac":
           case ".pack":
           case ".tpc":
             gameData = new BIN(File.ReadAllBytes(filePath));
@@ -48,6 +49,9 @@ internal class Helper
             break;
           case ".spr3":
             gameData = new SPR3(filePath);
+            break;
+          case ".bam":
+            gameData = new BAM(filePath);
             break;
           default:
             continue;
